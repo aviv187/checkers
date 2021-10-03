@@ -1,0 +1,19 @@
+.board {
+  height: 800px;
+  width: 800px;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.tile {
+  width: 100px;
+  height: 100px;
+}
+
+.dark_tile {
+  background-color: brown;
+}
+
+.white_tile {
+  background-color: white;
+}
