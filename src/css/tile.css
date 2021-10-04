@@ -1,0 +1,29 @@
+
+.tile {
+  width: 100px;
+  height: 100px;
+}
+
+.dark_tile {
+  background-color: brown;
+}
+
+.white_tile {
+  background-color: white;
+}
+
+.soldier {
+  height: 70px;
+  width: 70px;
+  border-radius: 100%;
+  position: fixed;
+  margin: 15px;
+}
+
+.black_soldier {
+  background-color: black;
+}
+
+.white_soldier {
+  background-color: white;
+}
