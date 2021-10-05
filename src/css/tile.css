@@ -27,3 +27,7 @@
 .white_soldier {
   background-color: white;
 }
+
+.selected {
+  background-color: blueviolet;
+}
