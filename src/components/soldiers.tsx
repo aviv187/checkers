@@ -7,15 +7,23 @@ import { Soldier } from '../modules/soldier';
 interface SoldiersProps {
   whiteSoldiers: Soldier[];
   blackSoldiers: Soldier[];
-  selectedSoldier: Soldier | null
-  setSelectedSoldier: React.Dispatch<React.SetStateAction<Soldier | null>>
+  selectedSoldier: Soldier | null;
+  setSelectedSoldier: React.Dispatch<React.SetStateAction<Soldier | null>>;
+  canMove: boolean;
+  turn: 'black' | 'white'
 }
 
-const Soldiers: React.FC<SoldiersProps> = ({ whiteSoldiers, selectedSoldier, setSelectedSoldier, blackSoldiers }) => {
+const Soldiers: React.FC<SoldiersProps> = ({ whiteSoldiers, selectedSoldier, setSelectedSoldier, blackSoldiers, canMove, turn }) => {
+  const selectSoldier = (soldier: Soldier) => {
+    if (canMove && selectedSoldier === null && turn === soldier.color) {
+      setSelectedSoldier(soldier);
+    }
+  }
+
   return <>
     {whiteSoldiers.map(soldier => {
       return <div
-        onClick={() => { selectedSoldier === null && setSelectedSoldier(soldier) }}
+        onClick={() => selectSoldier(soldier)}
         className={`soldier ${soldier.color}_soldier ${(selectedSoldier === soldier) && 'selected'}`}
         style={{
           'top': soldier.y * 100 + 'px',
@@ -25,7 +33,7 @@ const Soldiers: React.FC<SoldiersProps> = ({ whiteSoldiers, selectedSoldier, set
     })}
     {blackSoldiers.map(soldier => {
       return <div
-        onClick={() => setSelectedSoldier(soldier)}
+        onClick={() => selectSoldier(soldier)}
         className={`soldier ${soldier.color}_soldier ${(selectedSoldier === soldier) && 'selected'}`}
         style={{
           'top': soldier.y * 100 + 'px',

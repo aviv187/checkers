@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 import Soldiers from './soldiers';
 import Tile from './tile';
@@ -41,6 +41,7 @@ const blackSoldiersStartData: Soldier[] = [
 ];
 
 const Board: React.FC = () => {
+  // make the board
   let tiles = useMemo(() => {
     const tileData: JSX.ElementAttributesProperty[] = [];
 
@@ -60,6 +61,10 @@ const Board: React.FC = () => {
 
   const [selectedSoldier, setSelectedSoldier] = useState<null | Soldier>(null);
 
+  const [turn, setTurn] = useState<'black' | 'white'>('black');
+
+  const [oldSoldiersData, setOldSoldeirsData] = useState<{ black?: Soldier[], white?: Soldier[] } | null>(null);
+
   const moveSoldier = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
     const xPosition = Math.floor(e.clientX / 100);
     const yPosition = Math.floor(e.clientY / 100);
@@ -71,23 +76,85 @@ const Board: React.FC = () => {
         whiteSoldiers.indexOf(selectedSoldier) : blackSoldiers.indexOf(selectedSoldier);
       let isValidMove = false;
 
-      // check if the tile is neer
+      let deletedSoldier: Soldier | null = null;
+
       if (selectedSoldierIsWhite) {
+        // check if the tile is neer
         if (selectedSoldier.y + 1 === yPosition &&
           (
             selectedSoldier.x + 1 === xPosition ||
             selectedSoldier.x - 1 === xPosition
           )) {
           isValidMove = true;
+
+          // chack if the user eat a player
+        } else if (selectedSoldier.y + 2 === yPosition && (
+          selectedSoldier.x + 2 === xPosition ||
+          selectedSoldier.x - 2 === xPosition
+        )) {
+          // check if there is an opponent in the middle tile
+          for (const soldier of blackSoldiers) {
+
+            if ((selectedSoldier.y + 1 === soldier.y &&
+              (selectedSoldier.x + 1 === soldier.x ||
+                selectedSoldier.x - 1 === soldier.x
+              ))) {
+
+              if (selectedSoldier.x + 2 === xPosition &&
+                selectedSoldier.x + 1 === soldier.x
+              ) {
+                isValidMove = true;
+                deletedSoldier = soldier;
+              };
+
+              if (selectedSoldier.x - 2 === xPosition &&
+                selectedSoldier.x - 1 === soldier.x
+              ) {
+                isValidMove = true;
+                deletedSoldier = soldier;
+              };
+            }
+          }
         }
       }
+      // same as before but for the black soldiers
       if (!selectedSoldierIsWhite) {
+        // check if the tile is neer
         if (selectedSoldier.y - 1 === yPosition &&
           (
             selectedSoldier.x + 1 === xPosition ||
             selectedSoldier.x - 1 === xPosition
           )) {
           isValidMove = true;
+
+          // chack if the user eat a player
+        } else if (selectedSoldier.y - 2 === yPosition && (
+          selectedSoldier.x + 2 === xPosition ||
+          selectedSoldier.x - 2 === xPosition
+        )) {
+          // check if there is an opponent in the middle tile
+          for (const soldier of whiteSoldiers) {
+
+            if ((selectedSoldier.y - 1 === soldier.y &&
+              (selectedSoldier.x + 1 === soldier.x ||
+                selectedSoldier.x - 1 === soldier.x
+              ))) {
+
+              if (selectedSoldier.x + 2 === xPosition &&
+                selectedSoldier.x + 1 === soldier.x
+              ) {
+                isValidMove = true;
+                deletedSoldier = soldier;
+              };
+
+              if (selectedSoldier.x - 2 === xPosition &&
+                selectedSoldier.x - 1 === soldier.x
+              ) {
+                isValidMove = true;
+                deletedSoldier = soldier;
+              };
+            }
+          }
         }
       }
 
@@ -104,9 +171,27 @@ const Board: React.FC = () => {
       }
 
       // set the new soldiers array
-      if (index > -1 && isValidMove) {
-        const newSoldierList = selectedSoldierIsWhite ? [...whiteSoldiers] : [...blackSoldiers];
+      if (index > -1) {
+        const oldWhiteSoldiers = [...whiteSoldiers];
+        const oldBlackeSoldiers = [...blackSoldiers];
 
+        if (!isValidMove) {
+          setOldSoldeirsData(selectedSoldierIsWhite ? { white: oldWhiteSoldiers } : { black: oldBlackeSoldiers });
+        } else {
+          turn === 'black' ? setTurn('white') : setTurn('black');
+        }
+
+        // delete the opponent soldier
+        if (deletedSoldier && isValidMove) {
+          const opponentSoldierList = selectedSoldierIsWhite ? [...oldBlackeSoldiers] : [...oldWhiteSoldiers];
+
+          const opponentIndex = opponentSoldierList.indexOf(deletedSoldier);
+          opponentSoldierList.splice(opponentIndex, 1);
+
+          selectedSoldierIsWhite ? setBlackSoldiers(opponentSoldierList) : setWhiteSoldiers(opponentSoldierList);
+        }
+
+        const newSoldierList = selectedSoldierIsWhite ? [...oldWhiteSoldiers] : [...oldBlackeSoldiers];
         newSoldierList.splice(index, 1, {
           color: selectedSoldier.color,
           x: xPosition,
@@ -121,17 +206,39 @@ const Board: React.FC = () => {
     }
   }
 
-  return <div
-    className='board'
-    onClick={moveSoldier}
-  >
-    {tiles}
-    <Soldiers
-      selectedSoldier={selectedSoldier}
-      setSelectedSoldier={setSelectedSoldier}
-      whiteSoldiers={whiteSoldiers}
-      blackSoldiers={blackSoldiers} />
-  </div>;
+  // set the data back if the user move was not valid
+  useEffect(() => {
+    if (oldSoldiersData) {
+      setTimeout(() => {
+        if (oldSoldiersData.white) {
+          setWhiteSoldiers(oldSoldiersData.white!);
+        } else {
+          setBlackSoldiers(oldSoldiersData.black!);
+        }
+
+        setOldSoldeirsData(null);
+      }, 3000)
+    }
+  }, [oldSoldiersData])
+
+  return <>
+    <div
+      className='board'
+      onClick={moveSoldier}
+    >
+      {tiles}
+      <Soldiers
+        selectedSoldier={selectedSoldier}
+        setSelectedSoldier={setSelectedSoldier}
+        whiteSoldiers={whiteSoldiers}
+        blackSoldiers={blackSoldiers}
+        canMove={!oldSoldiersData}
+        turn={turn}
+      />
+    </div>
+    <button onClick={() => setSelectedSoldier(null)}>undo move</button>
+    {oldSoldiersData && <span className='warning'>This move is invalid</span>}
+  </>
 };
 
 export default Board;

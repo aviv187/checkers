@@ -3,6 +3,8 @@ import Board from './components/board';
 import './css/App.css';
 
 function App() {
+
+
   return (
     <div className="App">
       <Board />
