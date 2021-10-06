@@ -40,7 +40,11 @@ const blackSoldiersStartData: Soldier[] = [
   { color: 'black', y: 7, x: 7 }
 ];
 
-const Board: React.FC = () => {
+interface BoardProps {
+  setWinner: React.Dispatch<React.SetStateAction<'White' | 'Black' | null>>;
+}
+
+const Board: React.FC<BoardProps> = ({ setWinner }) => {
   // make the board
   let tiles = useMemo(() => {
     const tileData: JSX.ElementAttributesProperty[] = [];
@@ -78,85 +82,48 @@ const Board: React.FC = () => {
 
       let deletedSoldier: Soldier | null = null;
 
-      if (selectedSoldierIsWhite) {
-        // check if the tile is neer
-        if (selectedSoldier.y + 1 === yPosition &&
-          (
-            selectedSoldier.x + 1 === xPosition ||
-            selectedSoldier.x - 1 === xPosition
-          )) {
-          isValidMove = true;
+      // check if the tile is neer
+      const nextLineY = selectedSoldierIsWhite ? selectedSoldier.y + 1 : selectedSoldier.y - 1;
+      const twoLinesAfterY = selectedSoldierIsWhite ? selectedSoldier.y + 2 : selectedSoldier.y - 2;
 
-          // chack if the user eat a player
-        } else if (selectedSoldier.y + 2 === yPosition && (
-          selectedSoldier.x + 2 === xPosition ||
-          selectedSoldier.x - 2 === xPosition
+      if (nextLineY === yPosition &&
+        (
+          selectedSoldier.x + 1 === xPosition ||
+          selectedSoldier.x - 1 === xPosition
         )) {
-          // check if there is an opponent in the middle tile
-          for (const soldier of blackSoldiers) {
+        isValidMove = true;
 
-            if ((selectedSoldier.y + 1 === soldier.y &&
-              (selectedSoldier.x + 1 === soldier.x ||
-                selectedSoldier.x - 1 === soldier.x
-              ))) {
+        // chack if the user eat a player
+      } else if (twoLinesAfterY === yPosition && (
+        selectedSoldier.x + 2 === xPosition ||
+        selectedSoldier.x - 2 === xPosition
+      )) {
 
-              if (selectedSoldier.x + 2 === xPosition &&
-                selectedSoldier.x + 1 === soldier.x
-              ) {
-                isValidMove = true;
-                deletedSoldier = soldier;
-              };
+        // check if there is an opponent in the middle tile
+        for (const soldier of selectedSoldierIsWhite ? blackSoldiers : whiteSoldiers) {
 
-              if (selectedSoldier.x - 2 === xPosition &&
-                selectedSoldier.x - 1 === soldier.x
-              ) {
-                isValidMove = true;
-                deletedSoldier = soldier;
-              };
-            }
+          if ((nextLineY === soldier.y &&
+            (selectedSoldier.x + 1 === soldier.x ||
+              selectedSoldier.x - 1 === soldier.x
+            ))) {
+
+            if (selectedSoldier.x + 2 === xPosition &&
+              selectedSoldier.x + 1 === soldier.x
+            ) {
+              isValidMove = true;
+              deletedSoldier = soldier;
+            };
+
+            if (selectedSoldier.x - 2 === xPosition &&
+              selectedSoldier.x - 1 === soldier.x
+            ) {
+              isValidMove = true;
+              deletedSoldier = soldier;
+            };
           }
         }
       }
-      // same as before but for the black soldiers
-      if (!selectedSoldierIsWhite) {
-        // check if the tile is neer
-        if (selectedSoldier.y - 1 === yPosition &&
-          (
-            selectedSoldier.x + 1 === xPosition ||
-            selectedSoldier.x - 1 === xPosition
-          )) {
-          isValidMove = true;
 
-          // chack if the user eat a player
-        } else if (selectedSoldier.y - 2 === yPosition && (
-          selectedSoldier.x + 2 === xPosition ||
-          selectedSoldier.x - 2 === xPosition
-        )) {
-          // check if there is an opponent in the middle tile
-          for (const soldier of whiteSoldiers) {
-
-            if ((selectedSoldier.y - 1 === soldier.y &&
-              (selectedSoldier.x + 1 === soldier.x ||
-                selectedSoldier.x - 1 === soldier.x
-              ))) {
-
-              if (selectedSoldier.x + 2 === xPosition &&
-                selectedSoldier.x + 1 === soldier.x
-              ) {
-                isValidMove = true;
-                deletedSoldier = soldier;
-              };
-
-              if (selectedSoldier.x - 2 === xPosition &&
-                selectedSoldier.x - 1 === soldier.x
-              ) {
-                isValidMove = true;
-                deletedSoldier = soldier;
-              };
-            }
-          }
-        }
-      }
 
       //check if tile if empty
       for (const soldier of whiteSoldiers) {
@@ -170,7 +137,6 @@ const Board: React.FC = () => {
         }
       }
 
-      // set the new soldiers array
       if (index > -1) {
         const oldWhiteSoldiers = [...whiteSoldiers];
         const oldBlackeSoldiers = [...blackSoldiers];
@@ -191,6 +157,7 @@ const Board: React.FC = () => {
           selectedSoldierIsWhite ? setBlackSoldiers(opponentSoldierList) : setWhiteSoldiers(opponentSoldierList);
         }
 
+        // set the new soldiers array
         const newSoldierList = selectedSoldierIsWhite ? [...oldWhiteSoldiers] : [...oldBlackeSoldiers];
         newSoldierList.splice(index, 1, {
           color: selectedSoldier.color,
@@ -219,7 +186,29 @@ const Board: React.FC = () => {
         setOldSoldeirsData(null);
       }, 3000)
     }
-  }, [oldSoldiersData])
+  }, [oldSoldiersData]);
+
+  // check if there is a winner
+  useEffect(() => {
+    if (!oldSoldiersData) {
+      let whiteFinishedSoldiers = 0;
+      let blackFinishedSoldiers = 0;
+
+      for (const soldier of whiteSoldiers) {
+        if (soldier.y === 7) whiteFinishedSoldiers++;
+      }
+      for (const soldier of blackSoldiers) {
+        if (soldier.y === 0) blackFinishedSoldiers++;
+      }
+
+      if (whiteFinishedSoldiers > 1) {
+        setWinner('White');
+      }
+      if (blackFinishedSoldiers > 1) {
+        setWinner('Black');
+      }
+    }
+  }, [oldSoldiersData, blackSoldiers, whiteSoldiers, setWinner]);
 
   return <>
     <div

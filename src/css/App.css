@@ -2,3 +2,14 @@
   height: 100vh;
   background-color: cornsilk;
 }
+
+.winner_message {
+  z-index: 2;
+  font-size: 70px;
+  font-weight: bold;
+  color: darkblue;
+  position: fixed;
+  padding: 350px 100px;
+  height: 100%;
+  width: 100%;
+}

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useCallback, useMemo } from 'react'
 
 import '../css/tile.css'
 
@@ -14,33 +14,37 @@ interface SoldiersProps {
 }
 
 const Soldiers: React.FC<SoldiersProps> = ({ whiteSoldiers, selectedSoldier, setSelectedSoldier, blackSoldiers, canMove, turn }) => {
-  const selectSoldier = (soldier: Soldier) => {
+  const selectSoldier = useCallback((soldier: Soldier) => {
     if (canMove && selectedSoldier === null && turn === soldier.color) {
       setSelectedSoldier(soldier);
     }
-  }
+  }, [canMove, turn, selectedSoldier, setSelectedSoldier])
+
+  const whiteSoldiersElements = useMemo(() => whiteSoldiers.map(soldier => {
+    return <div
+      onClick={() => selectSoldier(soldier)}
+      className={`soldier ${soldier.color}_soldier ${(selectedSoldier === soldier) && 'selected'}`}
+      style={{
+        'top': soldier.y * 100 + 'px',
+        'left': soldier.x * 100 + 'px'
+      }}
+    ></div>
+  }), [selectedSoldier, selectSoldier, whiteSoldiers]);
+
+  const blackSoldiersElements = useMemo(() => blackSoldiers.map(soldier => {
+    return <div
+      onClick={() => selectSoldier(soldier)}
+      className={`soldier ${soldier.color}_soldier ${(selectedSoldier === soldier) && 'selected'}`}
+      style={{
+        'top': soldier.y * 100 + 'px',
+        'left': soldier.x * 100 + 'px'
+      }}
+    ></div>
+  }), [selectedSoldier, selectSoldier, blackSoldiers])
 
   return <>
-    {whiteSoldiers.map(soldier => {
-      return <div
-        onClick={() => selectSoldier(soldier)}
-        className={`soldier ${soldier.color}_soldier ${(selectedSoldier === soldier) && 'selected'}`}
-        style={{
-          'top': soldier.y * 100 + 'px',
-          'left': soldier.x * 100 + 'px'
-        }}
-      ></div>
-    })}
-    {blackSoldiers.map(soldier => {
-      return <div
-        onClick={() => selectSoldier(soldier)}
-        className={`soldier ${soldier.color}_soldier ${(selectedSoldier === soldier) && 'selected'}`}
-        style={{
-          'top': soldier.y * 100 + 'px',
-          'left': soldier.x * 100 + 'px'
-        }}
-      ></div>
-    })}
+    {whiteSoldiersElements}
+    {blackSoldiersElements}
   </>
 };
 
